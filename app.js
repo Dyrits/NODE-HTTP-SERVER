@@ -22,13 +22,9 @@ const server = http.createServer((request, response) => {
   `);
   } else if (request.url === "/message" && request.method === "POST") {
     parse(request, (error, data) => {
-      if (error) {
-        end.error500(response)
-      } else {
-        writeFile("data.txt", data, error => {
-          error ? end.error500(response) : end.redirect(response, "/");
-        });
-      }
+      error ? end.error500(response) : writeFile("data.txt", data, error => {
+        error ? end.error500(response) : end.redirect(response, "/");
+      });
     });
   } else {
     end.error404(response);
