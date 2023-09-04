@@ -1,5 +1,5 @@
 const http = require("http");
-const { writeFileSync } = require("fs");
+const { writeFile } = require("fs");
 
 const server = http.createServer((request, response) => {
   /*
@@ -23,20 +23,15 @@ const server = http.createServer((request, response) => {
   } else if (request.url === "/message" && request.method === "POST") {
     parse(request, (error, data) => {
       if (error) {
-        console.log(error);
-        response.setHeader("Content-Type", "application/json");
-        response.end("500 - Internal Server Error");
+        end.error500(response)
       } else {
-        console.log(data);
-        writeFileSync("data.txt", data);
-        response.setHeader("Location", "/");
-        response.statusCode = 302;
-        response.end();
+        writeFile("data.txt", data, error => {
+          error ? end.error500(response) : end.redirect(response, "/");
+        });
       }
     });
   } else {
-    response.setHeader("Content-Type", "text/html");
-    response.end(`404 - The page you are looking for does not exist.`);
+    end.error404(response);
   }
 
 });
@@ -53,6 +48,22 @@ function parse(request, callback) {
   request.on("error", (error) => {
     callback(error);
   });
+}
+
+const end = {
+  error500 (response) {
+    response.setHeader("Content-Type", "application/json");
+    response.end("500 - Internal Server Error");
+  },
+  error404 (response) {
+    response.setHeader("Content-Type", "application/json");
+    response.end("404 - The page you are looking for does not exist.");
+  },
+  redirect (response, location) {
+    response.setHeader("Location", location);
+    response.statusCode = 302;
+    response.end();
+  }
 }
 
 server.listen(3000);
